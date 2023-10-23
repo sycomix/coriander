@@ -15,11 +15,8 @@ current_dir = path.abspath(os.getcwd())
 
 def cd(subdir):
     global current_dir
-    if subdir.startswith('/'):
-        current_dir = subdir
-    else:
-        current_dir = join(current_dir, subdir)
-    print('cd to [%s]' % current_dir)
+    current_dir = subdir if subdir.startswith('/') else join(current_dir, subdir)
+    print(f'cd to [{current_dir}]')
 
 
 def mkdir(subdir):
@@ -108,7 +105,7 @@ def run_until(cmdlist, until):
 def maybe_rmtree(tree_dir):
     if path.isdir(tree_dir):
         if platform.uname()[0] == 'Windows':
-            run(['rmdir', '/s', '/q', '"%s"' % tree_dir])
+            run(['rmdir', '/s', '/q', f'"{tree_dir}"'])
         else:
             run(['rm', '-Rf', tree_dir])
 
@@ -152,16 +149,17 @@ def main(git_branch):
     # mkdir build
     EIGEN_HOME = join(os.getcwd(), 'eigen')
     cd('build')
-    run(['cmake', '-DEIGEN_TESTS=ON', '-DEIGEN_HOME=%s' % EIGEN_HOME, '..'])
+    run(['cmake', '-DEIGEN_TESTS=ON', f'-DEIGEN_HOME={EIGEN_HOME}', '..'])
     run(['make', '-j', '16'])
     so_suffix = '.so'
     if platform.uname()[0] == 'Darwin':
         so_suffix = '.dylib'
     elif platform.uname()[0] == 'Windows':
         so_suffix = '.dll'
-    artifacts_list = []
-    for libname in ['cocl', 'clew', 'clblast', 'easycl']:
-        artifacts_list.append('lib%s%s' % (libname, so_suffix))
+    artifacts_list = [
+        f'lib{libname}{so_suffix}'
+        for libname in ['cocl', 'clew', 'clblast', 'easycl']
+    ]
     run(['zip', '../artifacts.zip'] + artifacts_list)
     run(['make', '-j', '16', 'gtest-tests'])
     run(['make', '-j', '16', 'endtoend-tests'])

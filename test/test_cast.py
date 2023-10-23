@@ -55,8 +55,7 @@ define void @mykernel(i32* %data) {
         print('from_gpu[0]', from_gpu[0])
         assert expected == from_gpu[0].item()
         split_cl = cl_code.split('\n')
-        found_long_cast = False
-        for line in split_cl:
-            if ' >> 32' in line and '(long)' in line:
-                found_long_cast = True
+        found_long_cast = any(
+            ' >> 32' in line and '(long)' in line for line in split_cl
+        )
         assert found_long_cast

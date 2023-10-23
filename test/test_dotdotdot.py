@@ -37,8 +37,7 @@ def dotdotdot_cl():
 @pytest.fixture(scope='module')
 def dotdotdot(context, dotdotdot_cl):
     kernelName = test_common.mangle('test_si', ['float *'])
-    kernel = test_common.build_kernel(context, dotdotdot_cl, kernelName)
-    return kernel
+    return test_common.build_kernel(context, dotdotdot_cl, kernelName)
 
 
 def test_program_compiles(dotdotdot):

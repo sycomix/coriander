@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
         '/tmp/crashdump.cu'
     ] + test_common.cocl_options()).decode('utf-8'))
     for file in ['failed-kernel.cl', 'failed-kernel.ll', 'failed-kernel-meta.txt']:
-        if path.isfile('/tmp/%s' % file):
-            os.unlink('/tmp/%s' % file)
+        if path.isfile(f'/tmp/{file}'):
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/crashdump-device.ll', 'w') as f:
         f.write('my pretend ll file contents')
     with open('/tmp/crashdump-device.cl', 'w') as f:

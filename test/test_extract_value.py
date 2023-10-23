@@ -32,14 +32,14 @@ def extract_value_cl():
 
     with open(ll_filepath, 'r') as f:
         ll_sourcecode = f.read()
-    cl_sourcecode = test_common.ll_to_cl(ll_sourcecode=ll_sourcecode, kernelName=kernelname, num_clmems=1)
-    return cl_sourcecode
+    return test_common.ll_to_cl(
+        ll_sourcecode=ll_sourcecode, kernelName=kernelname, num_clmems=1
+    )
 
 
 @pytest.fixture(scope='module')
 def extract_value(context, extract_value_cl):
-    prog = cl.Program(context, extract_value_cl).build()
-    return prog
+    return cl.Program(context, extract_value_cl).build()
 
 
 def test_program_compiles(extract_value):

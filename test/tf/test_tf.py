@@ -16,12 +16,11 @@ import pytest
 
 
 def myrun(cmd_list):
-    print('running [%s]' % ' '.join(cmd_list))
-    f_out = open('/tmp/testout.txt', 'w+')
-    res = subprocess.run(cmd_list, stdout=f_out, stderr=subprocess.STDOUT)
-    f_out.seek(0)
-    contents = f_out.read()
-    f_out.close()
+    print(f"running [{' '.join(cmd_list)}]")
+    with open('/tmp/testout.txt', 'w+') as f_out:
+        res = subprocess.run(cmd_list, stdout=f_out, stderr=subprocess.STDOUT)
+        f_out.seek(0)
+        contents = f_out.read()
     print(contents)
     assert res.returncode == 0
 
@@ -141,10 +140,14 @@ def test_cwise_sqrt_singlebuffer(context, queue, float_data, float_data_gpu):
 
     size = N
 
-    # copy our host memory across
-    # cl.enqueue_copy(q, huge_buf_gpu_spare, src_host, device_offset=256, size=N * 4)
-    test_common.enqueue_write_buffer_ext(cl, queue, huge_buf_gpu, src_host, device_offset=src_offset_bytes, size=N * 4)
-
+    test_common.enqueue_write_buffer_ext(
+        cl,
+        queue,
+        huge_buf_gpu,
+        src_host,
+        device_offset=eval_ptr1_offset,
+        size=N * 4,
+    )
     global_size = 256
     workgroup_size = 256
     scratch = workgroup_size * 4
@@ -163,7 +166,14 @@ def test_cwise_sqrt_singlebuffer(context, queue, float_data, float_data_gpu):
     # check for errors
     queue.finish()
 
-    test_common.enqueue_read_buffer_ext(cl, queue, huge_buf_gpu, dst_host, device_offset=dst_offset_bytes, size=N * 4)
+    test_common.enqueue_read_buffer_ext(
+        cl,
+        queue,
+        huge_buf_gpu,
+        dst_host,
+        device_offset=eval_ptr0_offset,
+        size=N * 4,
+    )
     # cl.enqueue_copy(queue, dst_host, huge_buf_gpu, device_offset=128, size=N * 4)
     queue.finish()
     print('dst_host[:N]', dst_host[:N])

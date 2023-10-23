@@ -26,7 +26,7 @@ def context():
         i += len(gpu_devices)
 
     if ctx is None:
-        raise Exception('unable to find gpu at index %s' % gpu_idx)
+        raise Exception(f'unable to find gpu at index {gpu_idx}')
     print('context', ctx)
     # ctx = cl.create_some_context()
     return ctx
@@ -34,8 +34,7 @@ def context():
 
 @pytest.fixture(scope='module')
 def queue(context):
-    q = cl.CommandQueue(context)
-    return q
+    return cl.CommandQueue(context)
 
 
 @pytest.fixture(scope='module')
@@ -51,24 +50,20 @@ def ctx(context):
 @pytest.fixture
 def int_data():
     np.random.seed(123)
-    int_data = np.random.randint(1024, size=(1024,), dtype=np.int32)
-    return int_data
+    return np.random.randint(1024, size=(1024,), dtype=np.int32)
 
 
 @pytest.fixture
 def float_data():
     np.random.seed(124)
-    float_data = np.random.randn(1024).astype(np.float32)
-    return float_data
+    return np.random.randn(1024).astype(np.float32)
 
 
 @pytest.fixture
 def int_data_gpu(int_data, ctx):
-    int_data_gpu = cl.Buffer(ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=int_data)
-    return int_data_gpu
+    return cl.Buffer(ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=int_data)
 
 
 @pytest.fixture
 def float_data_gpu(float_data, ctx):
-    float_data_gpu = cl.Buffer(ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=float_data)
-    return float_data_gpu
+    return cl.Buffer(ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=float_data)
