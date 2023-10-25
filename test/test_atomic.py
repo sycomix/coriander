@@ -90,7 +90,7 @@ __global__ void mykernel(int *data) {
     for i in range(num_blocks * threads_per_block):
         num_attempts = from_gpu[i + 1]
         if num_attempts in seen_num_attempts:
-            raise Exception('already saw num_attempts %s' % num_attempts)
+            raise Exception(f'already saw num_attempts {num_attempts}')
         seen_num_attempts.add(num_attempts)
 
 
@@ -136,7 +136,7 @@ __global__ void mykernel(unsigned int *data) {
     for i in range(num_blocks * threads_per_block):
         num_attempts = from_gpu[i + 1]
         if num_attempts in seen_num_attempts:
-            raise Exception('already saw num_attempts %s' % num_attempts)
+            raise Exception(f'already saw num_attempts {num_attempts}')
         seen_num_attempts.add(num_attempts)
 
 

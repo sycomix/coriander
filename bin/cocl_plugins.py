@@ -41,7 +41,7 @@ def check_folder_writable(target):
     except:
         pass
     if not wrote_ok:
-        print('Please ensure the directory %s is writable' % target)
+        print(f'Please ensure the directory {target} is writable')
         sys.exit(-1)
 
 
@@ -70,7 +70,7 @@ def install(repo_url, git_branch):
     # tmpdir = '/tmp/coriander_clone'
     git_dir = join(COCL_INSTALL_PREFIX, 'git')
     plugin_name = repo_url.split('/')[-1].split('.')[0]
-    print('plugin_name [%s]' % plugin_name)
+    print(f'plugin_name [{plugin_name}]')
     plugin_git_dir = join(git_dir, plugin_name)
     if path.isdir(plugin_git_dir):
         print(check_output(['rm', '-Rf', plugin_git_dir]))
@@ -83,10 +83,18 @@ def install(repo_url, git_branch):
     print('repo_dir', repo_dir)
     build_dir = join(repo_dir, 'build')
     os.makedirs(build_dir)
-    print(check_output([
-        'cmake', '..', '-DCORIANDER_DIR=%s' % COCL_INSTALL_PREFIX, '-DCMAKE_INSTALL_PREFIX=%s' % COCL_INSTALL_PREFIX,
-        '-DCLANG_HOME=%s' % CLANG_HOME
-    ], cwd=build_dir))
+    print(
+        check_output(
+            [
+                'cmake',
+                '..',
+                f'-DCORIANDER_DIR={COCL_INSTALL_PREFIX}',
+                f'-DCMAKE_INSTALL_PREFIX={COCL_INSTALL_PREFIX}',
+                f'-DCLANG_HOME={CLANG_HOME}',
+            ],
+            cwd=build_dir,
+        )
+    )
     print(check_output([
         'make', '-j', '8'
     ], cwd=build_dir))

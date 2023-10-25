@@ -19,10 +19,9 @@ cocl_path = 'build/bin/cocl-internal'
 
 
 def run_process(cmdline_list, cwd=None, env=None):
-    print('running [%s]' % ' '.join(cmdline_list))
-    fout = open('/tmp/pout.txt', 'w')
-    res = subprocess.run(cmdline_list, stdout=fout, stderr=subprocess.STDOUT, cwd=cwd, env=env)
-    fout.close()
+    print(f"running [{' '.join(cmdline_list)}]")
+    with open('/tmp/pout.txt', 'w') as fout:
+        res = subprocess.run(cmdline_list, stdout=fout, stderr=subprocess.STDOUT, cwd=cwd, env=env)
     with open('/tmp/pout.txt', 'r') as f:
         output = f.read()
     print(output)
@@ -40,9 +39,20 @@ def enqueue_write_buffer_ext(cl, queue, mem, hostbuf, device_offset=0, size=None
         size = actual_size
     c_wait_for, num_wait_for = cl.cffi_cl._clobj_list(wait_for)
     nanny_event = cl.cffi_cl.NannyEvent._handle(hostbuf, c_ref)
-    cl.cffi_cl._handle_error(cl.cffi_cl._lib.enqueue_write_buffer(
-        ptr_event, queue.ptr, mem.ptr, c_buf, size, device_offset, c_wait_for, num_wait_for, bool(True),
-        nanny_event))
+    cl.cffi_cl._handle_error(
+        cl.cffi_cl._lib.enqueue_write_buffer(
+            ptr_event,
+            queue.ptr,
+            mem.ptr,
+            c_buf,
+            size,
+            device_offset,
+            c_wait_for,
+            num_wait_for,
+            True,
+            nanny_event,
+        )
+    )
     return cl.cffi_cl.NannyEvent._create(ptr_event[0])
 
 
@@ -54,9 +64,20 @@ def enqueue_read_buffer_ext(cl, queue, mem, hostbuf, device_offset=0, size=None,
         size = actual_size
     c_wait_for, num_wait_for = cl.cffi_cl._clobj_list(wait_for)
     nanny_event = cl.cffi_cl.NannyEvent._handle(hostbuf, c_ref)
-    cl.cffi_cl._handle_error(cl.cffi_cl._lib.enqueue_read_buffer(
-        ptr_event, queue.ptr, mem.ptr, c_buf, size, device_offset, c_wait_for, num_wait_for, bool(True),
-        nanny_event))
+    cl.cffi_cl._handle_error(
+        cl.cffi_cl._lib.enqueue_read_buffer(
+            ptr_event,
+            queue.ptr,
+            mem.ptr,
+            c_buf,
+            size,
+            device_offset,
+            c_wait_for,
+            num_wait_for,
+            True,
+            nanny_event,
+        )
+    )
     return cl.cffi_cl.NannyEvent._create(ptr_event[0])
 
 
@@ -84,7 +105,7 @@ def offset_type(offset):
 
 
 def mangle(name, param_types):
-    mangled = '_Z%s%s' % (len(name), name)
+    mangled = f'_Z{len(name)}{name}'
     for param in param_types:
         if param.replace(' ', '') == 'float*':
             mangled += 'Pf'
@@ -101,16 +122,16 @@ def mangle(name, param_types):
         elif param.endswith('*'):
             # assume pointer to struct
             param = param.replace(' ', '').replace('*', '')
-            mangled += 'P%s%s' % (len(param), param)
+            mangled += f'P{len(param)}{param}'
         else:
-            raise Exception('not implemented %s' % param)
+            raise Exception(f'not implemented {param}')
     return mangled
 
 
 def compile_code(cl, context, kernelSource, kernelName, num_clmems):
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(kernelSource)
     # args = get_cl_generation_options()
@@ -140,8 +161,7 @@ def compile_code(cl, context, kernelSource, kernelName, num_clmems):
 
     with open('/tmp/testprog-device.cl', 'r') as f:
         cl_sourcecode = f.read()
-    prog = cl.Program(context, cl_sourcecode).build()
-    return prog
+    return cl.Program(context, cl_sourcecode).build()
 
 
 def compile_code_v2(cl, context, kernelSource, kernelName, num_clmems):
@@ -150,7 +170,7 @@ def compile_code_v2(cl, context, kernelSource, kernelName, num_clmems):
     """
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(kernelSource)
 
@@ -186,7 +206,7 @@ def compile_code_v3(cl, context, kernelSource, kernelName, num_clmems):
     """
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(kernelSource)
 
@@ -239,7 +259,7 @@ def ll_to_cl(ll_sourcecode, kernelName, num_clmems):
 def cu_to_ll(cu_sourcecode):
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(cu_sourcecode)
 
@@ -260,22 +280,29 @@ def cu_to_ll(cu_sourcecode):
 def cu_to_devicell_explicit_opt(cu_sourcecode, opt=0):
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(cu_sourcecode)
-    print(subprocess.check_output([
-        clang_path,
-        '-x', 'cuda',
-        '-include', 'include/cocl/cocl_attributes.h',
-        '--cuda-device-only',
-        '-nocudainc',
-        '-nocudalib',
-        '-emit-llvm',
-        '/tmp/testprog.cu',
-        '-S',
-        '-O%s' % opt,
-        '-o', '/tmp/testprog.ll'
-    ]).decode('utf-8'))
+    print(
+        subprocess.check_output(
+            [
+                clang_path,
+                '-x',
+                'cuda',
+                '-include',
+                'include/cocl/cocl_attributes.h',
+                '--cuda-device-only',
+                '-nocudainc',
+                '-nocudalib',
+                '-emit-llvm',
+                '/tmp/testprog.cu',
+                '-S',
+                f'-O{opt}',
+                '-o',
+                '/tmp/testprog.ll',
+            ]
+        ).decode('utf-8')
+    )
     with open('/tmp/testprog.ll', 'r') as f:
         return f.read()
 
@@ -287,7 +314,7 @@ def cu_to_devicell_noopt(cu_sourcecode):
 def cu_to_cl(cu_sourcecode, kernelName, num_clmems):
     for file in os.listdir('/tmp'):
         if file.startswith('testprog'):
-            os.unlink('/tmp/%s' % file)
+            os.unlink(f'/tmp/{file}')
     with open('/tmp/testprog.cu', 'w') as f:
         f.write(cu_sourcecode)
 
@@ -322,5 +349,4 @@ def build_kernel(context, cl_sourcecode, kernelName):
     print('cl_sourcecode', cl_sourcecode)
     prog = cl.Program(context, cl_sourcecode).build()
     print('built prog')
-    kernel = prog.__getattr__(kernelName)
-    return kernel
+    return prog.__getattr__(kernelName)

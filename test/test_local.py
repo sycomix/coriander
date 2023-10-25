@@ -41,4 +41,4 @@ def test_local(context, q, float_data, float_data_gpu):
     q.finish()
     print('before', float_data_orig[:5])
     print('after', float_data[:5])
-    assert np.abs(float_data_orig[1:32] - float_data[0:31]).max() <= 1e-4
+    assert np.abs(float_data_orig[1:32] - float_data[:31]).max() <= 1e-4

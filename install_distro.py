@@ -31,14 +31,11 @@ def is_py2():
 
 def cd(subdir):
     global current_dir
-    if subdir.startswith('/'):
-        current_dir = subdir
-    else:
-        current_dir = join(current_dir, subdir)
-    print('cd to [%s]' % current_dir)
+    current_dir = subdir if subdir.startswith('/') else join(current_dir, subdir)
+    print(f'cd to [{current_dir}]')
     if not path.isdir(current_dir):
-        print('Folder %s doesnt exist' % current_dir)
-        raise Exception('Folder %s doesnt exist' % current_dir)
+        print(f'Folder {current_dir} doesnt exist')
+        raise Exception(f'Folder {current_dir} doesnt exist')
 
 
 def cd_repo_root():
@@ -61,7 +58,7 @@ def run(cmdlist):
         print('an issue at https://github.com/hughperkins/coriander/issues')
         print('')
         print('exception:', e)
-        print('current_dir [%s]' % current_dir)
+        print(f'current_dir [{current_dir}]')
         print('cmdlist', cmdlist)
         sys.exit(-1)
     res = ''
@@ -78,6 +75,7 @@ def run(cmdlist):
             #     line = line.decode('utf-8')
         return res_lines
         # print(lines)
+
     p.poll()
     while p.returncode is None:
         res += print_progress()
@@ -93,7 +91,7 @@ def makedir(target, sudo=False):
     if(':' not in target and target[0] != '/'):
         target = join(current_dir, target)
     if not path.isdir(target):
-        print('creating folder [%s]' % target)
+        print(f'creating folder [{target}]')
         if sudo:
             run(['sudo', 'mkdir', '-p', target])
         else:
@@ -112,9 +110,7 @@ def is_llvm_dir(p):
         return False
     llvm_version = run([clangxx_filepath, '--version']).split('clang version ')[1].split(' ')[0]
     print('llvm_version', llvm_version)
-    if llvm_version != REQUIRED_LLVM_VERSION:
-        return False
-    return True
+    return llvm_version == REQUIRED_LLVM_VERSION
 
 
 def wget(url, filename=None):
@@ -142,13 +138,19 @@ def install_llvm(install_dir):
     if filename.endswith('.tar.xz'):
         run(['tar', '-xf', filename])
         unzip_name = filename.replace('.tar.xz', '')
-        run(['mv', unzip_name, 'llvm-'+REQUIRED_LLVM_VERSION])
+        run(['mv', unzip_name, f'llvm-{REQUIRED_LLVM_VERSION}'])
         cd_repo_root()
-        llvm_dir = path.abspath(join(install_dir, 'soft', 'llvm-'+REQUIRED_LLVM_VERSION))
+        llvm_dir = path.abspath(
+            join(install_dir, 'soft', f'llvm-{REQUIRED_LLVM_VERSION}')
+        )
         if is_llvm_dir(llvm_dir):
-            print('installed llvm ok to [%s]' % join('soft', 'llvm-'+REQUIRED_LLVM_VERSION))
+            print(
+                f"installed llvm ok to [{join('soft', f'llvm-{REQUIRED_LLVM_VERSION}')}]"
+            )
         else:
-            print('Failed to install LLVM ' + REQUIRED_LLVM_VERSION +'.  Please retry, or install by hand')
+            print(
+                f'Failed to install LLVM {REQUIRED_LLVM_VERSION}.  Please retry, or install by hand'
+            )
             sys.exit(-1)
     else:
         print('Please install LLVM 4.0.0 by hand, into default location.  It is already downloaded into "soft" sub-directory. Just need to double-click it :-)')
@@ -157,10 +159,12 @@ def install_llvm(install_dir):
 
 def maybe_install_llvm(install_dir):
     global llvm_dir
-    for p in ['/usr/local/opt/llvm-4.0', 'C:\\Program Files\\LLVM', join(install_dir, 'soft', 'llvm-' + REQUIRED_LLVM_VERSION)]:
+    for p in ['/usr/local/opt/llvm-4.0', 'C:\\Program Files\\LLVM', join(install_dir, 'soft', f'llvm-{REQUIRED_LLVM_VERSION}')]:
         if is_llvm_dir(p):
             llvm_dir = p
-            print('found llvm, with required version %s at %s' % (REQUIRED_LLVM_VERSION, llvm_dir))
+            print(
+                f'found llvm, with required version {REQUIRED_LLVM_VERSION} at {llvm_dir}'
+            )
             break
     if llvm_dir is None:
         install_llvm(install_dir)
@@ -170,7 +174,14 @@ def install_coriander(install_dir):
     global llvm_dir
     makedir('build')
     cd('build')
-    run(['cmake', '..', '-DCLANG_HOME=%s' % llvm_dir, '-DCMAKE_INSTALL_PREFIX=%s' % install_dir])
+    run(
+        [
+            'cmake',
+            '..',
+            f'-DCLANG_HOME={llvm_dir}',
+            f'-DCMAKE_INSTALL_PREFIX={install_dir}',
+        ]
+    )
     if platform.uname()[0] in ['Darwin', 'Linux']:
         run(['make', '-j', '8'])
     else:
